@@ -1,0 +1,64 @@
+import pandas as pd
+from sqlalchemy import create_engine, text  # <-- Aquí agregamos 'text'
+
+# --- 1. CONFIGURACIÓN (Pon tus datos de Aiven aquí) ---
+USER = 'avnadmin'
+PASS = 'AVNS_wt1d1LtYoxp3T7wglRe'
+HOST = 'nombredelserviciomysql-braianalvarez94-9ead.e.aivencloud.com'
+PORT = '15385'
+DB   = 'defaultdb'
+
+# Crear la conexión
+conexion_url = f"mysql+pymysql://{USER}:{PASS}@{HOST}:{PORT}/{DB}"
+engine = create_engine(conexion_url)
+
+def ejecutar_etl():
+    archivo_csv = "rnc_dgii.csv" 
+    
+    try:
+        print("🚀 Preparando tabla con Primary Key en Aiven...")
+        
+        # 1. Crear la tabla manualmente primero
+        with engine.connect() as con:
+            # MySQL requiere el commit para confirmar cambios estructurales
+            con.execute(text("DROP TABLE IF EXISTS rnc_contribuyentes"))
+            con.execute(text("""
+                CREATE TABLE rnc_contribuyentes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    columna_1 VARCHAR(255),
+                    columna_2 VARCHAR(255),
+                    columna_3 VARCHAR(255),
+                    columna_4 VARCHAR(255),
+                    columna_5 VARCHAR(255),
+                    columna_6 VARCHAR(255)
+                )
+            """))
+            con.commit() # Confirmar la creación
+        
+        print("✅ Tabla creada. Iniciando carga de datos...")
+
+        # 2. Cargar los datos por bloques
+        lector = pd.read_csv(
+            archivo_csv, 
+            sep=',', 
+            encoding='latin-1', 
+            header=0, 
+            chunksize=50000
+        )
+
+        for i, bloque in enumerate(lector):
+            # Forzamos los nombres de columnas para que coincidan con la tabla SQL
+            # (ignorando el 'id' porque es autoincremental)
+            bloque.columns = [f"columna_{j+1}" for j in range(len(bloque.columns))]
+            
+            # Cargamos usando 'append'
+            bloque.to_sql('rnc_contribuyentes', con=engine, if_exists='append', index=False)
+            print(f"📦 Bloque {i+1} cargado exitosamente...")
+
+        print("\n✨ ¡Proceso completado con éxito!")
+
+    except Exception as e:
+        print(f"❌ Ocurrió un error: {e}")
+
+if __name__ == "__main__":
+    ejecutar_etl()

@@ -1,0 +1,70 @@
+CREATE OR REPLACE VIEW vista_rnc_regimen_simplificado AS
+SELECT 
+    columna_1 AS rnc_cedula, 
+    columna_2 AS razon_social, 
+    columna_6 AS regimen_pago
+FROM rnc_contribuyentes
+WHERE columna_6 LIKE '%SIMPLIFICADO%';
+
+CREATE OR REPLACE VIEW vista_rnc_regimen_normal AS
+SELECT 
+    columna_1 AS rnc_cedula, 
+    columna_2 AS razon_social, 
+    columna_6 AS regimen_pago
+FROM rnc_contribuyentes
+WHERE columna_6 = 'NORMAL';
+
+CREATE OR REPLACE VIEW vista_edesur_santo_domingo AS
+SELECT * FROM cobros_edesur 
+WHERE provincia = 'SANTO DOMINGO';
+
+CREATE OR REPLACE VIEW vista_edesur_santo_domingo AS 
+SELECT * FROM cobros_edesur  
+WHERE razon_social LIKE '%SANTO DOMINGO%'; 
+-- Nota: Si la columna 'estado' o 'razon_social' contiene la ubicación, filtra por ahí.
+
+-- Vista para Santo Domingo
+CREATE OR REPLACE VIEW vista_edesur_santo_domingo AS 
+SELECT * FROM cobros_edesur  
+WHERE razon_social LIKE '%SANTO DOMINGO%';
+
+-- Vista para San Cristóbal (o la provincia que tengas en tus datos)
+CREATE OR REPLACE VIEW vista_edesur_san_cristobal AS 
+SELECT * FROM cobros_edesur  
+WHERE razon_social LIKE '%SAN CRISTOBAL%';
+
+-- Vista para los que están en el Régimen Simplificado (RST)
+CREATE OR REPLACE VIEW vista_rnc_rst AS
+SELECT * FROM rnc_contribuyentes
+WHERE columna_6 LIKE '%SIMPLIFICADO%';
+
+-- Vista para los contribuyentes en Régimen Normal
+CREATE OR REPLACE VIEW vista_rnc_normal AS
+SELECT * FROM rnc_contribuyentes
+WHERE columna_6 = 'NORMAL';
+
+SELECT * FROM vista_edesur_santo_domingo LIMIT 10;
+SELECT * FROM vista_rnc_rst LIMIT 10;
+
+SELECT DISTINCT columna_6 FROM rnc_contribuyentes LIMIT 20;
+
+CREATE OR REPLACE VIEW vista_rnc_rst AS
+SELECT * FROM rnc_contribuyentes
+WHERE columna_6 = 'RST';
+
+CREATE OR REPLACE VIEW vista_rnc_normal AS
+SELECT * FROM rnc_contribuyentes
+WHERE columna_6 = 'NORMAL';
+
+SELECT * FROM vista_rnc_rst LIMIT 10;
+
+CREATE OR REPLACE VIEW vista_rnc_rst AS
+SELECT 
+    columna_1 AS rnc_cedula,
+    columna_2 AS nombre_razon_social,
+    columna_3 AS nombre_comercial,
+    columna_4 AS actividad_economica,
+    columna_5 AS fecha_inicio,
+    columna_6 AS regimen_pago
+FROM rnc_contribuyentes
+WHERE columna_6 = 'RST';

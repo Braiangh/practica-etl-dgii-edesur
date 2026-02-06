@@ -1,0 +1,62 @@
+import pandas as pd
+from sqlalchemy import create_engine, text
+
+# --- 1. CONFIGURACIÓN DE CONEXIÓN (Pon tus datos de Aiven aquí) ---
+USER = 'TU_USUARIO'
+PASS = 'TU_PASSWORD'
+HOST = 'TU_HOST'
+PORT = '15385'
+DB   = 'defaultdb'
+
+conexion_url = f"mysql+pymysql://{USER}:{PASS}@{HOST}:{PORT}/{DB}"
+engine = create_engine(conexion_url)
+
+def ejecutar_etl_edesur():
+    # Asegúrate de que el nombre del archivo sea el correcto
+    archivo_csv = "edesur_cobros.csv" 
+    
+    try:
+        print("🚀 Iniciando Proceso ETL de EDESUR...")
+        
+        # 1. LEER EL ARCHIVO
+        df = pd.read_csv(archivo_csv, sep=None, engine='python', encoding='latin-1')
+        
+        # Limpiar nombres de columnas para que coincidan con la DB
+        df.columns = [
+            col.lower().replace(" ", "_").replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u") 
+            for col in df.columns
+        ]
+        
+        print(f"✅ Archivo leído con {len(df.columns)} columnas.")
+
+        # 2. CREAR TABLA MANUALMENTE (Para cumplir con la Primary Key de Aiven)
+        with engine.connect() as con:
+            con.execute(text("DROP TABLE IF EXISTS cobros_edesur"))
+            con.execute(text("""
+                CREATE TABLE cobros_edesur (
+                    id_interno INT AUTO_INCREMENT PRIMARY KEY,
+                    rnc VARCHAR(50),
+                    razon_social TEXT,
+                    actividad_economica TEXT,
+                    fecha_inicio TEXT,
+                    estado VARCHAR(50),
+                    regimen_pago TEXT
+                )
+            """))
+            con.commit()
+        
+        print("✅ Tabla con Primary Key creada en Aiven.")
+
+        # 3. CARGA DE DATOS
+        # Ajustamos los nombres del DataFrame para que coincidan con la tabla creada
+        df.columns = ['rnc', 'razon_social', 'actividad_economica', 'fecha_inicio', 'estado', 'regimen_pago']
+        
+        df.to_sql('cobros_edesur', con=engine, if_exists='append', index=False)
+        
+        print("\n✨ ¡LOGRADO! Datos de EDESUR cargados exitosamente.")
+
+    except Exception as e:
+        print(f"❌ Error durante el proceso: {e}")
+
+if __name__ == "__main__":
+    ejecutar_etl_edesur()
