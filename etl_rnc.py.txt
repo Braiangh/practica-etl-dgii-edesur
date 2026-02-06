@@ -2,9 +2,9 @@ import pandas as pd
 from sqlalchemy import create_engine, text  # <-- Aquí agregamos 'text'
 
 # --- 1. CONFIGURACIÓN (Pon tus datos de Aiven aquí) ---
-USER = ''
-PASS = ''
-HOST = ''
+USER = 'TU_USUARIO'
+PASS = 'TU_PASSWORD'
+HOST = 'TU_HOST'
 PORT = '15385'
 DB   = 'defaultdb'
 
@@ -63,3 +63,4 @@ def ejecutar_etl():
 if __name__ == "__main__":
 
     ejecutar_etl()
+
